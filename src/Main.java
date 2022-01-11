@@ -1,39 +1,20 @@
-import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
 public class Main {
 	
-	
-	private static String readFromInputStream(InputStream inputStream) throws IOException {
-		StringBuilder resultStringBuilder = new StringBuilder();
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
-			String line;
-			while ((line = br.readLine()) != null) {
-				resultStringBuilder.append(line).append("\n");
-			}
-		}
-		return resultStringBuilder.toString();
-	}
-	
-	public static void fileWriter(String str) throws IOException {
-		FileWriter myWriter = new FileWriter("minisatInput.txt");
-		myWriter.write(str);
-		myWriter.close();
-	}
-
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		
 		CNFConverter cnfConverter = new CNFConverter();
 		
 		List<String> fileStream = Files.readAllLines(Paths.get(args[0]));
 	    int noOfLines = fileStream.size()-1;
-	    int n = Integer.parseInt(fileStream.get(0));
+	    int size = Integer.parseInt(fileStream.get(0));
+
+        int n = (int) Math.sqrt(size);
 	    
 	    if (noOfLines != n*n || n < 0)
 	    	throw new IllegalArgumentException("Size does not match with number of lines");
@@ -41,15 +22,63 @@ public class Main {
 	    int[][] Matrix = new int[n * n][n * n];
 	    Matrix = generateMatrixFromFilesData(fileStream, n);
 	    
-	    String formula = cnfConverter.toCNF(Matrix, n);
+	    String formula = cnfConverter.convertToCNF(Matrix, n);
 	    int nbVariables =  (int) Math.pow(n,6);
 	    int nbClauses = formula.split("\n").length;
 	    String DimacsContent = "p cnf " + nbVariables + " " + nbClauses + "\n" + formula;
 	    
 	    fileWriter(DimacsContent);
-	    
-	    
 
+        String mat = "";
+        for (int i=0;i<n*n;i++) {
+            for(int j=0; j<n*n;j++){
+                mat+=Matrix[i][j]+" ";
+            }
+            mat+="\n";
+        }
+        System.out.println(mat);
+
+        //executeMinisat();
+
+        //printResult(n);
+	    
+	}
+
+	public static void fileWriter(String str) throws IOException {
+		FileWriter myWriter = new FileWriter("minisatInput.txt");
+		myWriter.write(str);
+		myWriter.close();
+	}
+
+
+    public static int executeMinisat() throws IOException, InterruptedException {
+		String[] command = new String[] {"minisat", "minisatInput.txt", "output.txt"};
+		ProcessBuilder processbuilder = new ProcessBuilder(command);
+		Process process = processbuilder.start();
+		return process.waitFor();
+	}
+
+    public static void printResult(int n) throws IOException {
+        List<String> fileStream = Files.readAllLines(Paths.get("output.txt"));
+		
+		if(fileStream.get(0).equals("SAT")) {
+			System.out.println("SATISFIABLE\n");
+			String[] values = fileStream.get(1).split(" ");
+			for(int r = 0; r < n * n; r++) {
+				for(int c = 0; c < n * n; c++) {
+					for(int k = 0; k < n * n; k++) {
+						int value = Integer.parseInt(values[(n * n * n * n * r) + (n * n * c) + k]);
+						if(value > 0) {
+							System.out.print((value - (n * n * n * n * r) - (n * n * c)) + " ");
+							break;
+						}
+					}
+				}
+				System.out.println("\n");
+			}
+		} else {
+			System.out.println("UNSATISFIABLE\n");
+        }
 	}
 
 	private static int[][] generateMatrixFromFilesData(List<String> fileStream, int n) {
