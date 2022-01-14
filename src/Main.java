@@ -23,7 +23,7 @@ public class Main {
 	    Matrix = generateMatrixFromFilesData(fileStream, n);
 	    
 	    String formula = cnfConverter.convertToCNF(Matrix, n);
-	    int nbVariables =  (int) Math.pow(n,4);
+	    int nbVariables =  (int) Math.pow(n,3);
 	    int nbClauses = formula.split("\n").length;
 	    String DimacsContent = "p cnf " + nbVariables + " " + nbClauses + "\n" + formula;
 	    
