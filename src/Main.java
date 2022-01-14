@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Scanner;
 
 public class Main {
 	
@@ -10,66 +11,65 @@ public class Main {
 		
 		CNFConverter cnfConverter = new CNFConverter();
 		
-		List<String> fileStream = Files.readAllLines(Paths.get(args[0]));
+        String fileName = askForFile();
+		List<String> fileStream = Files.readAllLines(Paths.get(fileName));
 	    int noOfLines = fileStream.size()-1;
-	    int size = Integer.parseInt(fileStream.get(0));
-
-        int n = (int) Math.sqrt(size);
+	    int n = Integer.parseInt(fileStream.get(0));
 	    
-	    if (noOfLines != n*n || n < 0)
+	    if (noOfLines != n || n < 0)
 	    	throw new IllegalArgumentException("Size does not match with number of lines");
 	    
-	    int[][] Matrix = new int[n * n][n * n];
+	    int[][] Matrix = new int[n][n];
 	    Matrix = generateMatrixFromFilesData(fileStream, n);
 	    
 	    String formula = cnfConverter.convertToCNF(Matrix, n);
-	    int nbVariables =  (int) Math.pow(n,6);
+	    int nbVariables =  (int) Math.pow(n,4);
 	    int nbClauses = formula.split("\n").length;
 	    String DimacsContent = "p cnf " + nbVariables + " " + nbClauses + "\n" + formula;
 	    
 	    fileWriter(DimacsContent);
 
-        String mat = "";
-        for (int i=0;i<n*n;i++) {
-            for(int j=0; j<n*n;j++){
-                mat+=Matrix[i][j]+" ";
-            }
-            mat+="\n";
-        }
-        System.out.println(mat);
+        executeMinisat();
 
-        //executeMinisat();
-
-        //printResult(n);
+        printResult(n);
 	    
 	}
 
-	public static void fileWriter(String str) throws IOException {
-		FileWriter myWriter = new FileWriter("minisatInput.txt");
+	private static String askForFile() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter the sudoku file name :");
+
+        String fileName = scanner.next();
+        scanner.close();
+        return fileName;
+    }
+
+    public static void fileWriter(String str) throws IOException {
+		FileWriter myWriter = new FileWriter("inputMinisat.txt");
 		myWriter.write(str);
 		myWriter.close();
 	}
 
 
     public static int executeMinisat() throws IOException, InterruptedException {
-		String[] command = new String[] {"minisat", "minisatInput.txt", "output.txt"};
-		ProcessBuilder processbuilder = new ProcessBuilder(command);
-		Process process = processbuilder.start();
+		String[] command = new String[] {"minisat", "inputMinisat.txt", "outputMinisat.txt"};
+		ProcessBuilder processBuilder = new ProcessBuilder(command);
+		Process process = processBuilder.start();
 		return process.waitFor();
 	}
 
     public static void printResult(int n) throws IOException {
-        List<String> fileStream = Files.readAllLines(Paths.get("output.txt"));
+        List<String> fileStream = Files.readAllLines(Paths.get("outputMinisat.txt"));
 		
 		if(fileStream.get(0).equals("SAT")) {
 			System.out.println("SATISFIABLE\n");
 			String[] values = fileStream.get(1).split(" ");
-			for(int r = 0; r < n * n; r++) {
-				for(int c = 0; c < n * n; c++) {
-					for(int k = 0; k < n * n; k++) {
-						int value = Integer.parseInt(values[(n * n * n * n * r) + (n * n * c) + k]);
+			for(int r = 0; r < n; r++) {
+				for(int c = 0; c < n; c++) {
+					for(int k = 0; k < n; k++) {
+						int value = Integer.parseInt(values[(n * n * r) + (n * c) + k]);
 						if(value > 0) {
-							System.out.print((value - (n * n * n * n * r) - (n * n * c)) + " ");
+							System.out.print((value - (n * n * r) - (n * c)) + " ");
 							break;
 						}
 					}
@@ -83,19 +83,19 @@ public class Main {
 
 	private static int[][] generateMatrixFromFilesData(List<String> fileStream, int n) {
 		
-		int[][] Matrix = new int[n * n][n * n];
+		int[][] Matrix = new int[n][n];
 		
-		for (int r=0; r < n*n; r++) {
+		for (int r=0; r < n; r++) {
 	    	
 			String line = fileStream.get(r+1);
 	    	
 	    	String[] e = line.replaceAll("\\s*", "")
 	    					 .split("");
 	    	
-	    	if (e.length != n*n)
+	    	if (e.length != n)
 	    		throw new IllegalArgumentException("Number of columns does not match with number of lines at ligne "+(r+2));
 	    	
-	    	for (int c=0; c < n*n; c++) {
+	    	for (int c=0; c < n; c++) {
 	    		if (e[c].matches("\\-|\\_|\\.")) {
 	    			Matrix[r][c]=0;
 	    		} else {
@@ -103,10 +103,10 @@ public class Main {
 	    				throw new IllegalArgumentException("Unkonwn format "+e[c]);
 	    			
 	    			int value = generateIntValueFromString(e[c]);
-	    			if(value <= n*n) {
+	    			if(value <= n) {
 	    				Matrix[r][c] = value;
 	    			} else {
-	    				throw new IllegalArgumentException("Each value must be between 1 and " + (n*n));
+	    				throw new IllegalArgumentException("Each value must be between 1 and " + n);
 	    			}	
 	    		}   			
 	    	}
