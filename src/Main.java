@@ -19,7 +19,10 @@ public class Main {
 	    if (noOfLines != n || n < 0)
 	    	throw new IllegalArgumentException("Size does not match with number of lines");
 	    
-	    int[][] Matrix = new int[n][n];
+        if (n!=Math.pow(Math.sqrt(n),2))
+            throw new IllegalArgumentException("Number of lines must be a square number");
+	    
+        int[][] Matrix = new int[n][n];
 	    Matrix = generateMatrixFromFilesData(fileStream, n);
 	    
 	    String formula = cnfConverter.convertToCNF(Matrix, n);

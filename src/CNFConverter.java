@@ -25,7 +25,6 @@ public class CNFConverter {
 				cellDefinednessRule.append(" 0\n");
 			}
 		}
-
         
         /*
 		 * Rule 2 : Each number appears at most once in each column
@@ -58,18 +57,18 @@ public class CNFConverter {
         /*
 		 * Rule 4 :  Each number appears at most once in each sqrt_n*sqrt_n sub-grid
 		 */
-		StringBuilder blockDefinednessAndUniquenessRule = new StringBuilder();
+		StringBuilder blockUniquenessRule = new StringBuilder();
 		for (int v = 1; v <= n; v++) {
 			for (int i = 0; i <= sqrt_n-1; i++) {		
 				for (int j = 0; j <= sqrt_n-1; j++) {
 					for (int r = 1; r <= sqrt_n; r++) {
                         for (int c = 1; c <= sqrt_n; c++) {
                             for (int k = c+1; k <= sqrt_n; k++) {
-                                blockDefinednessAndUniquenessRule.append("-"+varCode((sqrt_n*i+r),(sqrt_n*j+c),v,n)+" -"+varCode((sqrt_n*i+r),(sqrt_n*j+k),v,n)+" 0\n");
+                                blockUniquenessRule.append("-"+varCode((sqrt_n*i+r),(sqrt_n*j+c),v,n)+" -"+varCode((sqrt_n*i+r),(sqrt_n*j+k),v,n)+" 0\n");
                             }
                             for (int k = r+1; k <= sqrt_n; k++) {
                                 for (int l = 1; l <= sqrt_n; l++) {
-                                    blockDefinednessAndUniquenessRule.append("-"+varCode((sqrt_n*i+r),(sqrt_n*j+c),v,n)+" -"+varCode((sqrt_n*i+k),(sqrt_n*j+l),v,n)+" 0\n");
+                                    blockUniquenessRule.append("-"+varCode((sqrt_n*i+r),(sqrt_n*j+c),v,n)+" -"+varCode((sqrt_n*i+k),(sqrt_n*j+l),v,n)+" 0\n");
                                 }
                             }
                         }
@@ -95,7 +94,7 @@ public class CNFConverter {
 		clauses.append(cellDefinednessRule);
 		clauses.append(rowUniquenessRule);
         clauses.append(colUniquenessRule);
-        clauses.append(blockDefinednessAndUniquenessRule);
+        clauses.append(blockUniquenessRule);
         clauses.append(assignedElementsRule);
 		
 		return clauses.toString();
